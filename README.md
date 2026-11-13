@@ -1,13 +1,11 @@
 # Cláudio Bial Recepções
 
-O site recebe solicitações em `POST /api/reservas`. O servidor grava no SQLite e só então devolve um protocolo. A equipe consulta as solicitações em `/painel`.
+O formulário salva a solicitação no sistema e entrega um protocolo. No mesmo navegador, o cliente cria apenas a senha. Para voltar em outro aparelho, usa o e-mail, o protocolo e a senha. A equipe responde pelo painel e o cliente lê a resposta em `/cliente`. O link de WhatsApp fica na área do cliente como opção de atendimento.
 
-## Executar
+## Executar localmente
 
-Requer Node.js 24. Defina `ADMIN_PASSWORD` com uma senha longa e exclusiva e execute `npm start`. Abra `http://127.0.0.1:3000`. Para o painel, use o usuário `admin` e a senha configurada.
+Com Node.js 24, rode `npm ci`, configure `ADMIN_PASSWORD` com uma senha exclusiva de pelo menos 16 caracteres e execute `npm start`. Acesse `http://127.0.0.1:3000`. O painel em `/painel` usa o usuário `admin` e a senha configurada. O banco SQLite fica em `data/reservas.sqlite` por padrão. Defina `DATABASE_PATH` para mudar o local.
 
-## Hospedar
+## Vercel
 
-Use um servidor Node.js com HTTPS e um volume persistente. Configure `DATABASE_PATH` para um arquivo nesse volume, `ADMIN_PASSWORD` como segredo e `HOST` e `PORT` conforme a hospedagem. A aplicação escuta em `127.0.0.1:3000` por padrão. Guarde cópias do banco usando o mecanismo de backup do SQLite. Hospedagem de HTML estático não executa a API de reservas.
-
-A confirmação da página indica que a solicitação foi gravada. A equipe consulta o painel e responde pelo e-mail informado.
+Configure `DATABASE_URL` com a conexão PostgreSQL (por exemplo, a URL com pool do Neon) e `ADMIN_PASSWORD` em **Settings → Environment Variables → Production**, depois faça um novo deploy. A função cria as tabelas no primeiro acesso com o banco configurado. Se já existirem reservas em um SQLite de outra instalação, elas permanecem nele e precisam ser migradas antes de desativá-lo.

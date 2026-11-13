@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/painel", "destination": "/api/sistema?__rota=painel" },
+    { "source": "/cliente", "destination": "/api/sistema?__rota=cliente" },
+    { "source": "/api/reservas", "destination": "/api/sistema?__rota=reservas" },
+    { "source": "/api/cliente/:acao", "destination": "/api/sistema?__rota=cliente-:acao" }
+  ]
+}

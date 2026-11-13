@@ -31,8 +31,9 @@ section[id]{scroll-margin-top:24px}
 .outline span,.button span{margin-left:10px}
 .journey{height:150svh;background:#262821}
 .scene{height:100svh;min-height:550px;position:sticky;top:0;display:grid;place-items:center;isolation:isolate;overflow:hidden;color:#fff8ed}
-.scene-frame,.scene-image,.scene-shade{position:absolute;inset:0}
+.scene-frame,.scene-image,.scene-shade,.scene-coast{position:absolute;inset:0}
 .scene-frame{overflow:hidden;}
+.scene-coast{width:100%;height:100%;object-fit:cover;object-position:50% 52%;opacity:var(--coast,0);transform:scale(var(--coast-zoom,1.035))}
 .scene-image{background:#34352a;width:100%;height:100%;object-fit:cover;object-position:center 56%;transform:scale(var(--zoom,1));transform-origin:center 51%;will-change:transform}
 .scene-shade{background:linear-gradient(180deg,#1a1712a6 0%,transparent 32%,#19191066 68%,#211e17b0),radial-gradient(ellipse at center,#1a17128a,transparent 84%)}
 .scene-copy{z-index:1;text-align:center;padding:90px 20px 65px;opacity:var(--copy,1);transform:translateY(var(--lift,0px))}
@@ -111,6 +112,8 @@ footer{border-top:1px solid #776852;background:#262a23;color:var(--paper);paddin
 .outline{background:#20251b48}
 .mobile-menu{display:none}
 .journey{background:#252e22;background:color-mix(in srgb,#252e22,var(--paper) calc(var(--paper-wash,0)*100%));height:165svh}
+.journey{position:relative;isolation:isolate}
+.journey-coast{display:none}
 .scene{place-items:center start}
 
 .scene-shade{background:linear-gradient(90deg,#171c14e3 0%,#191f15a6 36%,#20231726 75%),linear-gradient(180deg,#17201680,transparent 30%,transparent 71%,#171c1482)}
@@ -209,6 +212,7 @@ figure[data-reveal].is-visible{animation-delay:.075s}
   .masthead .mobile-menu nav a:last-child{border:0}
   .masthead .mobile-menu nav a:hover{color:var(--green);background:var(--linen)}
   .journey{height:calc(clamp(460px,74svh,660px) + 25svh)}
+  .journey-coast{display:block;position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent 76%,var(--paper) 100%),url("/foto-2.jpg") center 86%/cover no-repeat}
   .scene{height:clamp(460px,74svh,660px);min-height:0;place-items:center}
   
   .scene-copy{text-align:center;margin:0;width:min(100% - 36px,490px);max-width:none;padding:76px 0 64px}
@@ -263,6 +267,15 @@ figure[data-reveal].is-visible{animation-delay:.075s}
 .booking-confirmation button{margin-top:18px;background:none;border:0;border-bottom:1px solid currentColor;color:var(--green)}
 @media(max-width:760px){.booking-guide{margin-inline:auto;text-align:left}}
 @media(prefers-reduced-motion:reduce){.scene-image{animation:none}}
+@media(prefers-reduced-motion:reduce){.journey-coast,.scene-coast{display:none}}
+
+.booking-screen{border:0;margin:0;padding:0;min-width:0}
+.booking-screen legend{font:28px/1.15 var(--serif);margin-bottom:14px;padding:0}
+.booking-screen label{display:block;min-width:0}
+.booking-step{margin:0 0 12px}
+.booking-back{margin-top:12px;background:none;border:0;border-bottom:1px solid currentColor;color:var(--green)}
+.booking-screen:not([hidden]){animation:section-in .36s var(--ease) both}
+@media(prefers-reduced-motion:reduce){.booking-screen:not([hidden]){animation:none}}
 </style>
 </head>
 <body>
@@ -281,8 +294,13 @@ figure[data-reveal].is-visible{animation-delay:.075s}
   </header>
   <main>
     <section class="journey" aria-labelledby="titulo">
+      <div class="journey-coast" aria-hidden="true"></div>
       <div class="scene">
-        <div class="scene-frame" aria-hidden="true"><img id="foto-corredor" class="scene-image" src="/foto-1.jpg" alt="Corredor de cerimônia com cadeiras e arranjos florais" width="1440" height="958" fetchpriority="high"><div class="scene-shade"></div></div>
+        <div class="scene-frame" aria-hidden="true">
+          <img id="foto-corredor" class="scene-image" src="/foto-1.jpg" alt="Corredor de cerimônia com cadeiras e arranjos florais" width="1440" height="958" fetchpriority="high">
+          <img class="scene-coast" src="/foto-2.jpg" alt="" width="1600" height="1066">
+          <div class="scene-shade"></div>
+        </div>
         <div class="scene-copy">
           <p class="eyebrow hero-enter">PAU AMARELO · PERNAMBUCO</p>
           <h1 id="titulo"><span class="title-line"><span>O mar de fundo.</span></span><span class="title-line"><em>Vocês no centro.</em></span></h1>
@@ -361,11 +379,15 @@ figure[data-reveal].is-visible{animation-delay:.075s}
         </div>
         <div class="booking-card" data-reveal>
           <h3>Solicitar reserva</h3>
+          <a class="text-link booking-direct" href="/cliente">Já tenho uma solicitação</a>
           <form id="reservation" action="/api/reservas" method="post">
-            <div class="fields">
-              <label>Seu nome<input name="name" autocomplete="name" maxlength="100" required></label>
-              <label>Seu e-mail<input type="email" name="email" autocomplete="email" maxlength="160" required></label>
+            <p class="booking-note booking-step" id="booking-step" aria-live="polite"></p>
+            <fieldset class="booking-screen fields">
+              <legend tabindex="-1">Qual é a celebração?</legend>
               <label>Tipo de evento<select name="event" required><option value="">Selecione</option><option>Casamento</option><option>Mini wedding</option><option>Festa de 15 anos</option><option>Renovação de votos</option><option>Outra celebração</option></select></label>
+            </fieldset>
+            <fieldset class="booking-screen fields" hidden disabled>
+              <legend tabindex="-1">Conte um pouco mais</legend>
               <label>O que você busca?<select name="service"><option value="">Ainda estou decidindo</option><option>Espaço</option><option>Decoração</option><option>Recepção completa</option></select></label>
               <label>Data prevista <small>(opcional)</small><input name="date" type="date"></label>
               <label>Convidados <small>(opcional)</small><input name="guests" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Ex.: 80"></label>
@@ -374,16 +396,21 @@ figure[data-reveal].is-visible{animation-delay:.075s}
                 <label>Local <small>(opcional)</small><input name="venue" maxlength="120" placeholder="Pau Amarelo ou outro espaço"></label>
                 <label>Sobre a celebração <small>(opcional)</small><textarea name="notes" rows="3" maxlength="600" placeholder="Ex.: cerimônia ao ar livre ao fim da tarde"></textarea></label>
               </details>
-            </div>
+            </fieldset>
+            <fieldset class="booking-screen fields" hidden disabled>
+              <legend tabindex="-1">Como podemos falar com você?</legend>
+              <label>Seu nome<input name="name" autocomplete="name" maxlength="100" required></label>
+              <label>Seu e-mail<input type="email" name="email" autocomplete="email" maxlength="160" required></label>
+            </fieldset>
             <p id="form-error" class="form-error" role="alert" hidden></p>
             <button type="submit" class="button button-dark booking-submit">Enviar solicitação <span aria-hidden="true">↗</span></button>
-            <p class="booking-note">Usaremos seu e-mail para responder à consulta.</p>
+            <button class="text-link booking-back" type="button" hidden>Voltar</button>
           </form>
           <div class="booking-confirmation" id="booking-confirmation" tabindex="-1" hidden>
             <h4>Solicitação recebida</h4>
             <p>Seu protocolo é <strong id="booking-protocol"></strong>.</p>
-            <p>A equipe vai analisar a data e responder pelo e-mail informado.</p>
-            <button type="button" class="text-link" id="new-booking">Fazer outra consulta</button>
+            <p>Crie uma senha para acompanhar a resposta da equipe.</p>
+            <a href="/cliente" class="button button-dark booking-submit">Criar minha senha</a>
           </div>
         </div>
       </div>
@@ -416,6 +443,8 @@ function drawScene(now = performance.now()) {
   const progress = sceneProgress;
   const revealStart = Math.max(0, (progress - 0.16) / 0.84);
   const reveal = revealStart * revealStart * (3 - 2 * revealStart);
+  const coastStart = Math.max(0, Math.min(1, (progress - 0.23) / 0.60));
+  const coast = coastStart * coastStart * (3 - 2 * coastStart);
   const fade = Math.max(0, Math.min(1, (progress - 0.06) / 0.44));
   const copy = 1 - fade * fade * (3 - 2 * fade);
   const width = scene.clientWidth;
@@ -427,6 +456,8 @@ function drawScene(now = performance.now()) {
   sceneFrame.style.clipPath = motion.matches ? "none" :
     `inset(${vertical}px ${inset}px round ${corner}px ${corner}px ${reveal * 4}px ${reveal * 4}px)`;
   scene.style.setProperty("--zoom", String(1 + progress * 0.18));
+  scene.style.setProperty("--coast", String(coast));
+  scene.style.setProperty("--coast-zoom", String(1.035 - coast * 0.035));
   journey.style.setProperty("--paper-wash", String(reveal));
   scene.style.setProperty("--lift", (-progress * 18) + "px");
   scene.style.setProperty("--copy", String(copy));

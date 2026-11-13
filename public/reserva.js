@@ -1,53 +1,56 @@
 "use strict";
 
 const form = document.querySelector("#reservation");
+const screens = [...form.querySelectorAll(".booking-screen")];
 const error = document.querySelector("#form-error");
 const confirmation = document.querySelector("#booking-confirmation");
 const submit = form.querySelector("button[type=submit]");
+const back = form.querySelector(".booking-back");
 const date = form.elements.namedItem("date");
-let requestId;
+const keyName = "cb-cadastro-pendente";
+let step = 0;
+let attempt;
 
-function setMinimumDate() {
-  date.min = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Recife" }).format(new Date());
+function displayStep(index, focus = true) {
+  step = index;
+  screens.forEach((screen,i) => { screen.disabled = screen.hidden = i !== index; });
+  document.querySelector("#booking-step").textContent = "Etapa "+(index+1)+" de "+screens.length;
+  submit.textContent = index === screens.length-1 ? "Enviar solicitação" : "Continuar →";
+  back.hidden = index === 0;
+  if (focus) screens[index].querySelector("legend").focus();
 }
-
-setMinimumDate();
-form.addEventListener("input", () => { error.hidden = true; requestId = undefined; });
-form.addEventListener("submit", async (event) => {
+displayStep(0,false);
+date.min = new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Recife"}).format(new Date());
+back.addEventListener("click",()=>displayStep(step-1));
+form.addEventListener("input",()=>{ error.hidden=true; attempt=undefined; });
+form.addEventListener("submit",async(event)=>{
   event.preventDefault();
-  error.hidden = true;
-  submit.disabled = true;
-  form.setAttribute("aria-busy", "true");
+  if (step < screens.length-1) return displayStep(step+1);
+  error.hidden=true;
+  submit.disabled=back.disabled=true;
+  form.setAttribute("aria-busy","true");
   try {
-    requestId ??= crypto.randomUUID();
-    const response = await fetch(form.action, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), requestId })
-    });
+    const fields = Object.fromEntries([...form.querySelectorAll("[name]")].map(field=>[field.name,field.value]));
+    if (!attempt) {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      attempt = {requestId:crypto.randomUUID(),accessKey:btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"")};
+    }
+    // Check storage before sending so the customer can always reach password setup.
+    sessionStorage.setItem(keyName,JSON.stringify({...attempt,email:fields.email}));
+    const response = await fetch(form.action,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...fields,...attempt})});
     const result = await response.json();
     if (!response.ok || !result.protocol) throw new Error(result.error || "O envio não foi concluído.");
-    document.querySelector("#booking-protocol").textContent = result.protocol;
-    form.hidden = true;
-    confirmation.hidden = false;
+    sessionStorage.setItem(keyName,JSON.stringify({...attempt,email:fields.email,protocol:result.protocol}));
+    document.querySelector("#booking-protocol").textContent=result.protocol;
+    form.hidden=true;
+    confirmation.hidden=false;
     confirmation.focus();
   } catch (failure) {
     error.textContent = failure instanceof TypeError || failure instanceof SyntaxError
-      ? "Não conseguimos conectar ao sistema. Confira a conexão e tente novamente."
-      : failure.message;
-    error.hidden = false;
+      ? "Não conseguimos conectar ao sistema. Confira a conexão e tente novamente." : failure.message;
+    error.hidden=false;
   } finally {
-    submit.disabled = false;
+    submit.disabled=back.disabled=false;
     form.removeAttribute("aria-busy");
   }
-});
-
-document.querySelector("#new-booking").addEventListener("click", () => {
-  form.reset();
-  requestId = undefined;
-  error.hidden = true;
-  confirmation.hidden = true;
-  form.hidden = false;
-  setMinimumDate();
-  form.elements.namedItem("name").focus();
 });
